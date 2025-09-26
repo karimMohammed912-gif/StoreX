@@ -1,16 +1,53 @@
-# store_x
+# StoreX 🛍️
 
-A new Flutter project.
+A modern, feature-rich e-commerce mobile application built with Flutter. StoreX provides a seamless shopping experience with advanced features including product browsing, favorites management, secure payments, and user authentication.
 
-## Getting Started
+## ✨ Features
 
-This project is a starting point for a Flutter application.
+### 🏠 **Home & Product Discovery**
+- **Category-based browsing** with 20+ product categories including smartphones, laptops, beauty, fashion, and more
+- **Smart product grid** with responsive design and smooth animations
+- **Product filtering** by category, price, and rating
+- **Real-time search** functionality with instant results
 
-A few resources to get you started if this is your first Flutter project:
+### 🔍 **Advanced Search**
+- **Intelligent search** across product titles, descriptions, and brands
+- **Category filtering** for refined results
+- **Sort options** by price, rating, and popularity
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### ❤️ **Favorites Management**
+- **Local SQLite storage** for offline favorites access
+- **Add/remove products** from favorites with one tap
+- **Search and filter** favorite items
+- **Persistent storage** across app sessions
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 💳 **Secure Payments**
+- **Stripe integration** for secure payment processing
+- **Payment Sheet** implementation for seamless checkout
+- **Multiple payment methods** support
+- **Test mode** configuration for development
+
+### 👤 **User Authentication**
+- **Secure login system** with session management
+- **Persistent sessions** using SharedPreferences
+- **Protected routes** with authentication guards
+- **User profile management**
+
+### 📱 **Product Details**
+- **Rich product information** including descriptions, ratings, and reviews
+- **Image galleries** with smooth swiping
+- **Size and color selection**
+- **Quantity selector**
+- **Add to favorites** functionality
+- **Direct purchase** integration
+
+### 🎨 **Modern UI/UX**
+- **Responsive design** with Flutter ScreenUtil
+- **Floating bottom navigation** for intuitive navigation
+- **Custom animations** and transitions
+- **Dark theme** support
+- **Material Design** principles
+
+## 🏗️ Architecture
+
+StoreX follows a clean, modular architecture using **GetX** for state management:
