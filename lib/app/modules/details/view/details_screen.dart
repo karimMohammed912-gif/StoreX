@@ -26,7 +26,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
   late final SqliteFavoritesService favoritesService;
   late final StripePaymentService stripeService;
   int currentImageIndex = 0;
-  bool isFavorite = false;
   int selectedSize = 0;
   int selectedColor = 0;
 
@@ -35,10 +34,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
     super.initState();
     favoritesService = Get.find<SqliteFavoritesService>();
     stripeService = Get.find<StripePaymentService>();
-    final product = widget.product;
-    isFavorite = favoritesService.favoriteProducts.any(
-      (p) => p.id == product?.id,
-    );
   }
 
   int quantity = 1;
@@ -98,22 +93,19 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Title and Favorite
-                          ProductHeader(
-                            title: widget.product?.title ?? 'Product Name',
-                            isFavorite: isFavorite,
-                            onFavoriteTap: () async {
-                              // Toggle via service then reflect latest state
-                              final service =
-                                  Get.find<SqliteFavoritesService>();
-                              await service.toggleFavorite(widget.product);
-                              final nowFav = service.favoriteProducts.any(
-                                (p) => p.id == widget.product?.id,
-                              );
-                              setState(() {
-                                isFavorite = nowFav;
-                              });
-                            },
-                          ),
+                          Obx(() {
+                            final isFavorite = favoritesService.favoriteProducts
+                                .any((p) => p.id == widget.product?.id);
+                            return ProductHeader(
+                              title: widget.product?.title ?? 'Product Name',
+                              isFavorite: isFavorite,
+                              onFavoriteTap: () async {
+                                await favoritesService.toggleFavorite(
+                                  widget.product,
+                                );
+                              },
+                            );
+                          }),
                           SizedBox(height: 8.h),
 
                           // Rating and Reviews
@@ -199,7 +191,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   colorText: Colors.white,
                   duration: Duration(milliseconds: 800),
                 );
-                PaymentResult result;
+
                 try {
                   // Debug: log amount and product id
                   // ignore: avoid_print
@@ -209,7 +201,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         ', productId=' +
                         (widget.product?.id?.toString() ?? ''),
                   );
-                  result = await stripeService.processPayment(
+
+                  // Process a payment
+                  final result = await stripeService.presentPaymentSheet(
                     amount: amount,
                     currency: 'usd',
                     metadata: {
@@ -218,33 +212,26 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       'qty': quantity.toString(),
                     },
                   );
-                } catch (e) {
-                  Get.snackbar(
-                    'Payment Error',
-                    e.toString(),
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.red,
-                    colorText: Colors.white,
-                  );
-                  return;
-                }
 
-                if (result.isSuccess) {
-                  Get.snackbar(
-                    'Payment Successful',
-                    'Paid \$${amount.toStringAsFixed(2)}',
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.green,
-                    colorText: Colors.white,
-                  );
-                } else {
-                  Get.snackbar(
-                    'Payment Failed',
-                    result.errorMessage ?? 'Unknown error',
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.red,
-                    colorText: Colors.white,
-                  );
+                  if (result.isSuccess) {
+                    Get.snackbar(
+                      'Payment Successful',
+                      'Paid \$${amount.toStringAsFixed(2)}',
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.green,
+                      colorText: Colors.white,
+                    );
+                  } else {
+                    Get.snackbar(
+                      'Payment Failed',
+                      result.errorMessage ?? 'Unknown error',
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.red,
+                      colorText: Colors.white,
+                    );
+                  }
+                } catch (e) {
+                  print('Error processing payment: $e');
                 }
               },
             ),
