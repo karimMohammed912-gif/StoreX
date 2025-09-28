@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:store_x/app/routes/router_config.dart';
+import 'package:store_x/app/services/services.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize services
+  Get.put(SqliteFavoritesService());
+  Get.put(StripePaymentService());
+  
   runApp(const MyApp());
 }
 
