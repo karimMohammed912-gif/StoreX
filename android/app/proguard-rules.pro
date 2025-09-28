@@ -1,10 +1,12 @@
--dontwarn com.stripe.android.pushProvisioning.PushProvisioningActivity$g
--dontwarn com.stripe.android.pushProvisioning.PushProvisioningActivityStarter$Args
--dontwarn com.stripe.android.pushProvisioning.PushProvisioningActivityStarter$Error
--dontwarn com.stripe.android.pushProvisioning.PushProvisioningActivityStarter
--dontwarn com.stripe.android.pushProvisioning.PushProvisioningEphemeralKeyProvider
--dontwarn kotlinx.parcelize.Parceler$DefaultImpls
--dontwarn kotlinx.parcelize.Parceler
--dontwarn kotlinx.parcelize.Parcelize
-# Keep Stripe classes
+# Stripe ProGuard rules
 -keep class com.stripe.** { *; }
+-keep class com.stripe.android.** { *; }
+-dontwarn com.stripe.**
+
+# Keep Stripe models
+-keep class com.stripe.android.model.** { *; }
+-keep class com.stripe.android.core.** { *; }
+
+# Keep payment methods
+-keep class com.stripe.android.payments.** { *; }
+-keep class com.stripe.android.paymentmethods.** { *; }

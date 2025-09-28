@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Internet permission for Stripe API calls -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Network state permission for Stripe -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
     <application
         android:label="store_x"
         android:name="${applicationName}"
@@ -30,6 +35,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        
+        <!-- Stripe configuration -->
+        <meta-data
+            android:name="com.stripe.android.publishableKey"
+            android:value="pk_test_51SAtbZFdmdPmSfYrNK1yJyjj6hIQdDkFLBNo5rZFZ5RHiBp6c9b7tM97yxVfstTnY4PxaU0b44acKm49R5H7erzQ00Ch6el4c6" />
+        
+        <!-- Stripe payment methods -->
+        <meta-data
+            android:name="com.stripe.android.paymentMethods"
+            android:value="card" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
