@@ -85,14 +85,12 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               SizedBox(height: 10.h),
 
-              Obx(
-                () => SizedBox(
-                  width: double.infinity,
-                  child: LoginButton(
-                    auth: auth,
-                    emailController: emailController,
-                    passwordController: passwordController,
-                  ),
+              SizedBox(
+                width: double.infinity,
+                child: LoginButton(
+                  auth: auth,
+                  emailController: emailController,
+                  passwordController: passwordController,
                 ),
               ),
 

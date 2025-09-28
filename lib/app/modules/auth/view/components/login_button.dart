@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:store_x/app/modules/auth/controllers/auth_controller.dart';
+import 'package:store_x/app/services/session_service.dart';
 
 class LoginButton extends StatelessWidget {
   const LoginButton({
@@ -17,7 +18,7 @@ class LoginButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    return Obx(() => ElevatedButton(
                   onPressed: auth.isLoading.value
                       ? null
                       : () async {
@@ -36,6 +37,7 @@ class LoginButton extends StatelessWidget {
                           );
 
                           if (auth.isLoggedIn) {
+                            SessionService().saveUser(auth.currentUser.value!);
                             print('isLoggedIn: ${auth.isLoggedIn}');
                             Get.toNamed('/');
                           }
@@ -64,6 +66,6 @@ class LoginButton extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                );
+                ));
   }
 }

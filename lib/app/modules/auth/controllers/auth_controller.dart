@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:get/get.dart';
 import 'package:store_x/app/modules/auth/user_model/user_model.dart';
 import 'package:store_x/app/networking/api.dart';
 import 'package:store_x/app/services/session_service.dart';
+import 'package:store_x/app/services/sqlite_favorites_service.dart';
 
 class AuthController extends GetxController {
   final isLoading = false.obs;
@@ -10,19 +13,37 @@ class AuthController extends GetxController {
   final SessionService _session = SessionService();
 
   bool get isLoggedIn => currentUser.value != null;
+  
 
   @override
   void onInit() {
     super.onInit();
-    _restoreSession();
+    _restoreSessionSync();
   }
 
-  Future<void> _restoreSession() async {
-    final user = await _session.loadUser();
-    if (user != null) {
-      currentUser.value = user;
-      Api.setAuthToken(user.accessToken);
-    }
+  @override
+  void onReady() {
+    super.onReady();
+    log('isLoggedIn at the controller: $isLoggedIn');
+  }
+
+  void _restoreSessionSync() {
+    _session.loadUser().then((user) {
+      if (user != null) {
+        currentUser.value = user;
+        Api.setAuthToken(user.accessToken);
+        log('Session restored for user: ${user.email}');
+      } else {
+        log('No session found');
+        currentUser.value = null;
+      }
+      // Trigger UI update after session restoration
+      update();
+    }).catchError((e) {
+      log('Error restoring session: $e');
+      currentUser.value = null;
+      update();
+    });
   }
 
   Future<void> login({required String email, required String password}) async {
@@ -40,6 +61,16 @@ class AuthController extends GetxController {
       currentUser.value = user;
       await _session.saveUser(user);
       Api.setAuthToken(user.accessToken);
+      
+      // Reset favorites service for new user session
+      try {
+        final favoritesService = Get.find<SqliteFavoritesService>();
+        await favoritesService.resetForNewUser();
+        print('Favorites service reset for new user: ${user.email}');
+      } catch (e) {
+        print('Error resetting favorites service: $e');
+      }
+      
       // Navigate to home after setting user
       if (Get.currentRoute != '/') {
         Get.offAllNamed('/');
@@ -61,6 +92,16 @@ class AuthController extends GetxController {
   Future<void> logout() async {
     currentUser.value = null;
     await _session.clear();
+    
+    // Clear favorites when user logs out
+    try {
+      final favoritesService = Get.find<SqliteFavoritesService>();
+      await favoritesService.clearAllFavorites();
+      print('Favorites cleared on logout');
+    } catch (e) {
+      print('Error clearing favorites on logout: $e');
+    }
+    
     if (Get.currentRoute != '/auth') {
       Get.offAllNamed('/auth');
     }
