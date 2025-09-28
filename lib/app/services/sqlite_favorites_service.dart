@@ -121,6 +121,8 @@ class SqliteFavoritesService extends GetxService {
       if (result > 0) {
         favoriteProducts.insert(0, product);
         favoriteProducts.refresh();
+        print('Product added to favorites: ${product.title} (ID: ${product.id})');
+        print('Total favorites: ${favoriteProducts.length}');
         return true;
       }
       return false;
@@ -143,6 +145,7 @@ class SqliteFavoritesService extends GetxService {
       if (result > 0) {
         favoriteProducts.removeWhere((product) => product.id == productId);
         favoriteProducts.refresh();
+        print('Product removed from favorites: $productId');
         return true;
       }
       return false;
@@ -189,9 +192,17 @@ class SqliteFavoritesService extends GetxService {
     final isCurrentlyFavorite = favoriteProducts.any((p) => p.id == product.id);
 
     if (isCurrentlyFavorite) {
-      return await removeFromFavorites(product.id!);
+      final result = await removeFromFavorites(product.id!);
+      if (result) {
+        print('Product removed from favorites: ${product.title}');
+      }
+      return result;
     } else {
-      return await addToFavorites(product);
+      final result = await addToFavorites(product);
+      if (result) {
+        print('Product added to favorites: ${product.title}');
+      }
+      return result;
     }
   }
 
@@ -203,7 +214,7 @@ class SqliteFavoritesService extends GetxService {
   /// Get favorite count
   int get favoriteCount => favoriteProducts.length;
 
-  /// Clear all favorites
+  /// Clear all favorites and reset the service
   Future<bool> clearAllFavorites() async {
     try {
       final db = await _getDatabase();
@@ -211,12 +222,26 @@ class SqliteFavoritesService extends GetxService {
 
       if (result >= 0) {
         favoriteProducts.clear();
+        favoriteProducts.refresh();
+        print('All favorites cleared');
         return true;
       }
       return false;
     } catch (e) {
       print('Error clearing all favorites: $e');
       return false;
+    }
+  }
+
+  /// Reset the service for a new user session
+  Future<void> resetForNewUser() async {
+    try {
+      await clearAllFavorites();
+      // Force reload to ensure UI is updated
+      await _loadFavorites();
+      print('Favorites service reset for new user');
+    } catch (e) {
+      print('Error resetting favorites service: $e');
     }
   }
 
