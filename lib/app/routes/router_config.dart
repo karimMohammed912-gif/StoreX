@@ -7,6 +7,8 @@ import 'package:store_x/app/modules/search/view/search_screen.dart';
 import 'package:store_x/app/modules/search/bindings/search_binding.dart';
 import 'package:store_x/app/modules/auth/bindings/auth_binding.dart';
 import 'package:store_x/app/modules/auth/view/auth_screen.dart';
+import 'package:store_x/app/modules/cart/view/cart_screen.dart';
+import 'package:store_x/app/modules/cart/bindings/cart_binding.dart';
 import 'package:store_x/app/utils/auth_wrapper.dart';
 
 final routes = [
@@ -28,5 +30,10 @@ final routes = [
     name: '/auth',
     page: () => const AuthScreen(),
     binding: AuthBinding(),
+  ),
+  GetPage(
+    name: '/cart',
+    page: () => SafeArea(child: const CartScreen()),
+    binding: CartBinding(),
   ),
 ];

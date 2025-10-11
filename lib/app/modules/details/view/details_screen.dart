@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:store_x/app/data/models/home_model/product.dart';
 import 'package:store_x/app/modules/details/view/components/porduct_app_bar.dart';
 import 'package:store_x/app/services/sqlite_favorites_service.dart';
+import 'package:store_x/app/services/sqlite_cart_service.dart';
 import 'package:store_x/app/services/stripe_payment_service.dart';
 import 'components/product_image_slider.dart';
 import 'components/product_header.dart';
@@ -24,6 +25,7 @@ class DetailsScreen extends StatefulWidget {
 
 class _DetailsScreenState extends State<DetailsScreen> {
   late final SqliteFavoritesService favoritesService;
+  late final SqliteCartService cartService;
   late final StripePaymentService stripeService;
   int currentImageIndex = 0;
   int selectedSize = 0;
@@ -33,6 +35,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   void initState() {
     super.initState();
     favoritesService = Get.find<SqliteFavoritesService>();
+    cartService = Get.find<SqliteCartService>();
     stripeService = Get.find<StripePaymentService>();
   }
 
@@ -40,13 +43,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   // Sample product data
 
-  final List<String> sizes = ['S', 'M', 'L', 'XL'];
-  final List<Color> colors = [
-    Colors.black,
-    Colors.red,
-    Colors.blue,
-    Colors.green,
-  ];
+
 
   final int reviewCount = 128;
 
@@ -161,14 +158,30 @@ class _DetailsScreenState extends State<DetailsScreen> {
             // Payment UI
             PaymentUI(
               totalPrice: (widget.product?.price ?? 0) * quantity,
-              onAddToCart: () {
-                Get.snackbar(
-                  'Added to Cart',
-                  'Product added to cart successfully!',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.green,
-                  colorText: Colors.white,
-                );
+              onAddToCart: () async {
+                if (widget.product != null) {
+                  final success = await cartService.addToCart(
+                    widget.product!,
+                    quantity: quantity,
+                  );
+                  if (success) {
+                    Get.snackbar(
+                      'Added to Cart',
+                      '${widget.product!.title} added to cart successfully!',
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.green,
+                      colorText: Colors.white,
+                    );
+                  } else {
+                    Get.snackbar(
+                      'Already in Cart',
+                      'Quantity updated in cart',
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.orange,
+                      colorText: Colors.white,
+                    );
+                  }
+                }
               },
               onBuyNow: () async {
                 final price = (widget.product?.price ?? 0).toDouble();
@@ -195,13 +208,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 try {
                   // Debug: log amount and product id
                   // ignore: avoid_print
-                  print(
-                    'BuyNow tapped: amount=' +
-                        amount.toString() +
-                        ', productId=' +
-                        (widget.product?.id?.toString() ?? ''),
-                  );
-
                   // Process a payment
                   final result = await stripeService.presentPaymentSheet(
                     amount: amount,

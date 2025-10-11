@@ -3,11 +3,11 @@ import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 
 
-
+/// Stripe Payment Service to handle payment intents and payment sheet
 class StripePaymentService extends GetxService {
   // Test keys for development - replace with your actual test keys
-  static const String _publishableKey = 'Your Own publishable Key';
-  static const String _secretKey = 'Your Own secret Key';
+  static const String _publishableKey = 'Your Own publishable Key'; // add your own publishable key
+  static const String _secretKey = 'Your Own secret Key'; // add your own secret key
   
   final Dio _dio = Dio();
 
