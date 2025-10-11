@@ -3,6 +3,7 @@ import 'package:floating_bottom_navigation_bar/floating_bottom_navigation_bar.da
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:store_x/app/utils/home_widgets.dart';
+import 'package:store_x/app/services/sqlite_cart_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,6 +14,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
+  final cartService = Get.find<SqliteCartService>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,6 +49,44 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               icon: Icon(size: 30.sp, Icons.search, color: Colors.white),
             ),
+            Obx(() {
+              final itemCount = cartService.itemCount;
+              return Stack(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      Get.toNamed('/cart');
+                    },
+                    icon: Icon(size: 30.sp, Icons.shopping_cart, color: Colors.white),
+                  ),
+                  if (itemCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: EdgeInsets.all(2.sp),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: 16.w,
+                          minHeight: 16.h,
+                        ),
+                        child: Text(
+                          '$itemCount',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            }),
           ],
         ),
       ),
