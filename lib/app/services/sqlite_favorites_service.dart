@@ -1,51 +1,22 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 import '../data/models/home_model/product.dart';
+import 'base_sqlite_service.dart';
 
-class SqliteFavoritesService extends GetxService {
-  static Database? _database;
-  static const String _tableName = 'favorite_products';
-  static const String _dbName = 'store_x_favorites.db';
-  static const int _dbVersion = 1;
+class SqliteFavoritesService extends BaseSqliteService {
+  @override
+  String get dbName => 'store_x_favorites.db';
+  
+  @override
+  String get tableName => 'favorite_products';
 
-  // Observable list of favorite products
   final RxList<Product> favoriteProducts = <Product>[].obs;
 
   @override
-  void onInit() {
-    super.onInit();
-    _initDatabase();
-  }
-
-  /// Initialize the database
-  Future<void> _initDatabase() async {
-    _database = await _getDatabase();
-    await _loadFavorites();
-  }
-
-  /// Get database instance
-  Future<Database> _getDatabase() async {
-    if (_database != null) return _database!;
-
-    final databasesPath = await getDatabasesPath();
-    final path = join(databasesPath, _dbName);
-
-    _database = await openDatabase(
-      path,
-      version: _dbVersion,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
-
-    return _database!;
-  }
-
-  /// Create database tables
-  Future<void> _onCreate(Database db, int version) async {
+  Future<void> onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE $_tableName (
+      CREATE TABLE $tableName (
         id INTEGER PRIMARY KEY,
         product_id INTEGER UNIQUE NOT NULL,
         product_data TEXT NOT NULL,
@@ -54,22 +25,11 @@ class SqliteFavoritesService extends GetxService {
     ''');
   }
 
-  /// Handle database upgrades
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Handle database schema upgrades here
-    if (oldVersion < 2) {
-      // Example: Add new columns or tables for future versions
-    }
-  }
-
-  /// Load all favorite products from database
-  Future<void> _loadFavorites() async {
+  @override
+  Future<void> loadData() async {
     try {
-      final db = await _getDatabase();
-      final List<Map<String, dynamic>> maps = await db.query(
-        _tableName,
-        orderBy: 'added_at DESC',
-      );
+      final db = await getDatabase();
+      final maps = await db.query(tableName, orderBy: 'added_at DESC');
 
       favoriteProducts.clear();
       for (final map in maps) {
@@ -78,8 +38,7 @@ class SqliteFavoritesService extends GetxService {
           final product = Product.fromJson(productData);
           favoriteProducts.add(product);
         } catch (e) {
-          print('Error parsing product data: $e');
-          // Remove corrupted data
+          print('Error parsing favorite: $e');
           await _removeFavoriteById(map['product_id'] as int);
         }
       }
@@ -88,56 +47,39 @@ class SqliteFavoritesService extends GetxService {
     }
   }
 
-  /// Add a product to favorites
   Future<bool> addToFavorites(Product product) async {
     try {
-      if (product.id == null) {
-        print('Product ID is null, cannot add to favorites');
-        return false;
-      }
+      if (product.id == null) return false;
 
-      final db = await _getDatabase();
-
-      // Check if product is already in favorites
+      final db = await getDatabase();
       final existing = await db.query(
-        _tableName,
+        tableName,
         where: 'product_id = ?',
         whereArgs: [product.id],
       );
 
-      if (existing.isNotEmpty) {
-        print('Product is already in favorites');
-        return false;
-      }
+      if (existing.isNotEmpty) return false;
 
-      // Insert new favorite
-      final productData = jsonEncode(product.toJson());
-      final result = await db.insert(_tableName, {
+      await db.insert(tableName, {
         'product_id': product.id,
-        'product_data': productData,
+        'product_data': jsonEncode(product.toJson()),
         'added_at': DateTime.now().millisecondsSinceEpoch,
       });
 
-      if (result > 0) {
-        favoriteProducts.insert(0, product);
-        favoriteProducts.refresh();
-        print('Product added to favorites: ${product.title} (ID: ${product.id})');
-        print('Total favorites: ${favoriteProducts.length}');
-        return true;
-      }
-      return false;
+      favoriteProducts.insert(0, product);
+      favoriteProducts.refresh();
+      return true;
     } catch (e) {
       print('Error adding to favorites: $e');
       return false;
     }
   }
 
-  /// Remove a product from favorites
   Future<bool> removeFromFavorites(int productId) async {
     try {
-      final db = await _getDatabase();
+      final db = await getDatabase();
       final result = await db.delete(
-        _tableName,
+        tableName,
         where: 'product_id = ?',
         whereArgs: [productId],
       );
@@ -145,7 +87,6 @@ class SqliteFavoritesService extends GetxService {
       if (result > 0) {
         favoriteProducts.removeWhere((product) => product.id == productId);
         favoriteProducts.refresh();
-        print('Product removed from favorites: $productId');
         return true;
       }
       return false;
@@ -155,117 +96,82 @@ class SqliteFavoritesService extends GetxService {
     }
   }
 
-  /// Remove favorite by database ID (internal use)
   Future<void> _removeFavoriteById(int productId) async {
     try {
-      final db = await _getDatabase();
+      final db = await getDatabase();
       await db.delete(
-        _tableName,
+        tableName,
         where: 'product_id = ?',
         whereArgs: [productId],
       );
     } catch (e) {
-      print('Error removing favorite by ID: $e');
+      print('Error removing favorite: $e');
     }
   }
 
-  /// Check if a product is in favorites
   Future<bool> isFavorite(int productId) async {
     try {
-      final db = await _getDatabase();
+      final db = await getDatabase();
       final result = await db.query(
-        _tableName,
+        tableName,
         where: 'product_id = ?',
         whereArgs: [productId],
       );
       return result.isNotEmpty;
     } catch (e) {
-      print('Error checking if product is favorite: $e');
+      print('Error checking favorite: $e');
       return false;
     }
   }
 
-  /// Toggle favorite status
   Future<bool> toggleFavorite(Product? product) async {
     if (product == null || product.id == null) return false;
 
-    final isCurrentlyFavorite = favoriteProducts.any((p) => p.id == product.id);
-
-    if (isCurrentlyFavorite) {
-      final result = await removeFromFavorites(product.id!);
-      if (result) {
-        print('Product removed from favorites: ${product.title}');
-      }
-      return result;
-    } else {
-      final result = await addToFavorites(product);
-      if (result) {
-        print('Product added to favorites: ${product.title}');
-      }
-      return result;
-    }
+    final isFav = favoriteProducts.any((p) => p.id == product.id);
+    return isFav 
+        ? await removeFromFavorites(product.id!)
+        : await addToFavorites(product);
   }
 
-  /// Get all favorite products
-  List<Product> getFavorites() {
-    return List.from(favoriteProducts);
-  }
+  List<Product> getFavorites() => List.from(favoriteProducts);
 
-  /// Get favorite count
   int get favoriteCount => favoriteProducts.length;
 
-  /// Clear all favorites and reset the service
   Future<bool> clearAllFavorites() async {
     try {
-      final db = await _getDatabase();
-      final result = await db.delete(_tableName);
-
-      if (result >= 0) {
-        favoriteProducts.clear();
-        favoriteProducts.refresh();
-        print('All favorites cleared');
-        return true;
-      }
-      return false;
+      final db = await getDatabase();
+      await db.delete(tableName);
+      favoriteProducts.clear();
+      favoriteProducts.refresh();
+      return true;
     } catch (e) {
-      print('Error clearing all favorites: $e');
+      print('Error clearing favorites: $e');
       return false;
     }
   }
 
-  /// Reset the service for a new user session
   Future<void> resetForNewUser() async {
-    try {
-      await clearAllFavorites();
-      // Force reload to ensure UI is updated
-      await _loadFavorites();
-      print('Favorites service reset for new user');
-    } catch (e) {
-      print('Error resetting favorites service: $e');
-    }
+    await clearAllFavorites();
+    await loadData();
   }
 
-  /// Search favorites by title or description
   List<Product> searchFavorites(String query) {
     if (query.isEmpty) return getFavorites();
 
-    final lowercaseQuery = query.toLowerCase();
+    final q = query.toLowerCase();
     return favoriteProducts.where((product) {
-      return (product.title?.toLowerCase().contains(lowercaseQuery) ?? false) ||
-          (product.description?.toLowerCase().contains(lowercaseQuery) ??
-              false) ||
-          (product.brand?.toLowerCase().contains(lowercaseQuery) ?? false);
+      return (product.title?.toLowerCase().contains(q) ?? false) ||
+          (product.description?.toLowerCase().contains(q) ?? false) ||
+          (product.brand?.toLowerCase().contains(q) ?? false);
     }).toList();
   }
 
-  /// Get favorites by category
   List<Product> getFavoritesByCategory(String category) {
-    return favoriteProducts.where((product) {
-      return product.category?.toLowerCase() == category.toLowerCase();
-    }).toList();
+    return favoriteProducts
+        .where((p) => p.category?.toLowerCase() == category.toLowerCase())
+        .toList();
   }
 
-  /// Get favorites sorted by price
   List<Product> getFavoritesSortedByPrice({bool ascending = true}) {
     final sorted = List<Product>.from(favoriteProducts);
     sorted.sort((a, b) {
@@ -276,30 +182,13 @@ class SqliteFavoritesService extends GetxService {
     return sorted;
   }
 
-  /// Get favorites sorted by rating
   List<Product> getFavoritesSortedByRating({bool ascending = false}) {
     final sorted = List<Product>.from(favoriteProducts);
     sorted.sort((a, b) {
       final ratingA = a.rating ?? 0.0;
       final ratingB = b.rating ?? 0.0;
-      return ascending
-          ? ratingA.compareTo(ratingB)
-          : ratingB.compareTo(ratingA);
+      return ascending ? ratingA.compareTo(ratingB) : ratingB.compareTo(ratingA);
     });
     return sorted;
-  }
-
-  /// Close database connection
-  Future<void> closeDatabase() async {
-    if (_database != null) {
-      await _database!.close();
-      _database = null;
-    }
-  }
-
-  @override
-  void onClose() {
-    closeDatabase();
-    super.onClose();
   }
 }
