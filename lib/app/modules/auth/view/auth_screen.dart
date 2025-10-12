@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:store_x/app/modules/auth/controllers/auth_controller.dart';
 import 'package:store_x/app/modules/auth/view/components/field_widget.dart';
 import 'package:store_x/app/modules/auth/view/components/login_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -40,6 +41,78 @@ class _AuthScreenState extends State<AuthScreen> {
                   fontSize: 12.sp,
                   color: Colors.grey[600],
                   height: 1.3,
+                ),
+              ),
+              SizedBox(height: 16.h),
+
+              // Hint for test users
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.blue[700], size: 18.sp),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Test Credentials',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue[900],
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'You can use any user\'s credentials from ',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        final Uri url = Uri.parse('https://dummyjson.com/users');
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                        } else {
+                          Get.snackbar(
+                            'Error',
+                            'Could not open URL',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                        }
+                      },
+                      child: Text(
+                        'dummyjson.com/users',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'use the username and password',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: 16.h),

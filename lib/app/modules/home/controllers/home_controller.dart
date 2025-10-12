@@ -18,10 +18,25 @@ class HomeController extends GetxController {
     fetchHome(); // default fetch
   }
 
+  @override
+  void onClose() {
+    // Clean up resources
+    super.onClose();
+  }
+
+  // Reset controller state (useful for re-login scenarios)
+  void reset() {
+    isLoading.value = false;
+    error.value = null;
+    data.value = null;
+    selectedCategory.value = 'all';
+    fetchHome(); // Re-fetch data
+  }
+
   Future<void> fetchHome({String? category}) async {
     isLoading.value = true;
     error.value = null;
-    selectedCategory.value = category ?? 'smartphones'; // fallback
+    selectedCategory.value = category ?? 'all'; // default to 'all'
     final result = await _repo.getHomeData(category: selectedCategory.value);
 
     result.fold(

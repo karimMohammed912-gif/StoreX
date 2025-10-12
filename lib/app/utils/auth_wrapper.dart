@@ -11,20 +11,22 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<AuthController>(
-      init: Get.find<AuthController>(),
-      builder: (authController) {
-        // Show loading while session is being restored
-        if (authController.currentUser.value == null) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-        
-        return authController.isLoggedIn ? const HomeScreen() : const AuthScreen();
-      },
-    );
+    final authController = Get.find<AuthController>();
+    
+    return Obx(() {
+      // Use Obx for better reactivity
+      final user = authController.currentUser.value;
+      
+      // Show loading while session is being restored (initially user is null)
+      if (user == null && authController.isLoading.value) {
+        return const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+      
+      return authController.isLoggedIn ? const HomeScreen() : const AuthScreen();
+    });
   }
 }

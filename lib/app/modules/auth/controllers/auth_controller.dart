@@ -5,6 +5,7 @@ import 'package:store_x/app/modules/auth/user_model/user_model.dart';
 import 'package:store_x/app/networking/api.dart';
 import 'package:store_x/app/services/session_service.dart';
 import 'package:store_x/app/services/sqlite_favorites_service.dart';
+import 'package:store_x/app/modules/home/controllers/home_controller.dart';
 
 class AuthController extends GetxController {
   final isLoading = false.obs;
@@ -69,6 +70,17 @@ class AuthController extends GetxController {
         print('Favorites service reset for new user: ${user.email}');
       } catch (e) {
         print('Error resetting favorites service: $e');
+      }
+      
+      // Reset home controller if it exists
+      try {
+        if (Get.isRegistered<HomeController>()) {
+          final homeController = Get.find<HomeController>();
+          homeController.reset();
+          print('HomeController reset for new session');
+        }
+      } catch (e) {
+        print('HomeController not yet initialized or error: $e');
       }
       
       // Navigate to home after setting user

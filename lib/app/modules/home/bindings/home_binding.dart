@@ -9,6 +9,9 @@ class HomeBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<Api>(() => Api());
     Get.lazyPut<HomeRepo>(() => HomeRepo());
-    Get.lazyPut<HomeController>(() => HomeController(Get.find<HomeRepo>()));
+    Get.lazyPut<HomeController>(
+      () => HomeController(Get.find<HomeRepo>()),
+      fenix: true, // Keep controller alive and reusable
+    );
   }
 }
