@@ -6,6 +6,7 @@ import 'package:store_x/app/modules/profile/view/components/custom_divider.dart'
 import 'package:store_x/app/modules/profile/view/components/menu_item.dart';
 import 'package:store_x/app/modules/profile/view/components/profile_header_widget.dart';
 import 'package:store_x/app/modules/profile/view/components/profile_stats_widget.dart';
+import 'package:store_x/app/services/sqlite_cart_service.dart';
 import 'package:store_x/app/services/sqlite_favorites_service.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -156,7 +157,7 @@ class ProfileScreen extends StatelessWidget {
               Get.back();
               auth.currentUser.value = null;
               await SqliteFavoritesService().clearAllFavorites();
-
+              await SqliteCartService().clearCart();
               Get.offAllNamed('/auth');
 
               Get.snackbar(
